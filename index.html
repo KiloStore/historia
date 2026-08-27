@@ -3,207 +3,663 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Trivia de Historia Universal</title>
+  <title>Chronos — Historia Universal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
+      --bg: #0b0f17;
+      --surface: #131924;
+      --surface-border: #1e2638;
+      --surface-hover: #192130;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
       --accent: #38bdf8;
-      --text: #f8fafc;
-      --success: #22c55e;
-      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text-muted: #808ea3;
+      --success: #10b981;
+      --danger: #f43f5e;
+      --radius: 12px;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+
     body {
-      font-family: system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
       min-height: 100vh;
-      margin: 0;
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
     }
-    .game-container {
-      background-color: var(--card);
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 600px;
-      width: 100%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
+
+    /* HEADER / NAVBAR */
     .header {
+      width: 100%;
+      max-width: 960px;
+      padding: 20px 24px;
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
-      font-weight: bold;
-      color: var(--accent);
+      align-items: center;
+      border-bottom: 1px solid var(--surface-border);
     }
-    .question {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-    .options {
-      display: grid;
+
+    .brand {
+      display: flex;
+      align-items: center;
       gap: 10px;
     }
-    button {
-      background-color: #334155;
-      color: var(--text);
-      border: 2px solid transparent;
-      padding: 12px 16px;
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--surface-border);
       border-radius: 8px;
-      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .brand-title {
       font-size: 1rem;
-      text-align: left;
-      transition: all 0.2s ease;
+      font-weight: 700;
+      letter-spacing: -0.3px;
     }
-    button:hover:not(:disabled) {
-      border-color: var(--accent);
-      background-color: #475569;
-    }
-    button:disabled { cursor: not-allowed; }
-    .correct { background-color: var(--success) !important; color: white; }
-    .incorrect { background-color: var(--danger) !important; color: white; }
-    .explanation {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #0f172a;
-      border-left: 4px solid var(--accent);
+
+    .brand-badge {
+      background: rgba(79, 70, 229, 0.15);
+      color: #818cf8;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
       border-radius: 4px;
-      display: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .next-btn {
-      margin-top: 20px;
+
+    .score-counter {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .score-counter strong {
+      color: var(--text);
+      margin-left: 4px;
+    }
+
+    /* LAYOUT MAIN */
+    .main-container {
       width: 100%;
-      background-color: var(--accent);
-      color: #0f172a;
-      font-weight: bold;
+      max-width: 800px;
+      padding: 40px 20px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* HERO MENU */
+    .hero {
       text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* CARD GRID */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      background: var(--surface-hover);
+      border-color: #2e3952;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--surface-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    /* INPUTS Y BOTONES */
+    .input-field {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      padding: 12px 14px;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .input-field.error {
+      border-color: var(--danger) !important;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .error-message {
+      color: #fb7185;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 6px;
       display: none;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      width: 100%;
+    }
+
+    .btn:hover { background: var(--primary-hover); }
+    .btn:active { transform: scale(0.99); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover { background: var(--surface-hover); }
+
+    /* CATEGORIAS INFERIORES */
+    .categories-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .cat-item {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* PANTALLA DE JUEGO */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .opt-btn {
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+    }
+
+    .opt-btn.correct {
+      background: rgba(16, 185, 129, 0.1) !important;
+      border-color: var(--success) !important;
+      color: #34d399 !important;
+    }
+
+    .opt-btn.incorrect {
+      background: rgba(244, 63, 94, 0.1) !important;
+      border-color: var(--danger) !important;
+      color: #fb7185 !important;
+    }
+
+    .player-list {
+      list-style: none;
+      margin: 20px 0;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--surface-border);
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .categories-bar { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 1.75rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="game-container">
-  <div class="header">
-    <span id="score">Puntos: 0</span>
-    <span id="progress">Pregunta 1/5</span>
-  </div>
+  <!-- BARRA NAVEGACION -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">⏱</div>
+      <span class="brand-title">Chronos</span>
+      <span class="brand-badge">Historia</span>
+    </div>
+    <div class="score-counter">
+      Puntos: <strong id="nav-score">0</strong>
+    </div>
+  </header>
 
-  <div id="quiz">
-    <div class="question" id="question-text">Cargando pregunta...</div>
-    <div class="options" id="options-container"></div>
-    <div class="explanation" id="explanation-text"></div>
-    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Siguiente Pregunta</button>
-  </div>
+  <main class="main-container">
 
-  <div id="result" style="display: none; text-align: center;">
-    <h2>¡Juego Terminado!</h2>
-    <p id="final-score" style="font-size: 1.5rem;"></p>
-    <button onclick="restartGame()" style="text-align: center;">Jugar de Nuevo</button>
-  </div>
-</div>
+    <!-- MENU PRINCIPAL -->
+    <div id="screen-menu" class="screen active">
+      <div class="hero">
+        <div class="pill-tag">
+          <span>•</span> Cultura General Internacional
+        </div>
+        <h1>Aprende los acontecimientos que cambiaron la humanidad</h1>
+        <p>Acontecimientos decisivos, leyes históricas y giros geopolíticos. Poné a prueba tu conocimiento general por rondas.</p>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <input type="text" id="player-name" class="input-field" placeholder="Ingresá tu apodo o nombre" maxlength="15" oninput="clearInputError()" />
+        <div id="name-error-msg" class="error-message">
+          <span>⚠️</span> Ingresá un nombre o apodo antes de continuar.
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div>
+            <div class="card-icon">⚡</div>
+            <h3>Crear Sala Online</h3>
+            <p>Iniciá una partida en tiempo real y compartí el código de acceso con otros jugadores.</p>
+          </div>
+          <button class="btn" onclick="createRoom()">Crear Sala</button>
+        </div>
+
+        <div class="card">
+          <div>
+            <div class="card-icon">🔗</div>
+            <h3>Unirse a una Sala</h3>
+            <p>Ingresá el código de 4 letras para sumarte al lobby de una partida existente.</p>
+          </div>
+          <div id="join-box" style="display: none; margin-bottom: 10px;">
+            <input type="text" id="room-code-input" class="input-field" placeholder="CÓDIGO" style="text-transform: uppercase; margin-bottom: 8px;" maxlength="4" />
+            <button class="btn" onclick="joinRoom()">Entrar</button>
+          </div>
+          <button id="join-trigger" class="btn btn-secondary" onclick="showJoinBox()">Ingresar código</button>
+        </div>
+      </div>
+
+      <div class="categories-bar">
+        <div class="cat-item">Antigüedad</div>
+        <div class="cat-item">Edad Media</div>
+        <div class="cat-item">Descubrimientos</div>
+        <div class="cat-item">Siglo XX y XXI</div>
+      </div>
+    </div>
+
+    <!-- LOBBY SALA -->
+    <div id="screen-lobby" class="screen">
+      <div class="panel" style="text-align: center;">
+        <h2 style="font-size: 1.4rem; font-weight: 600; margin-bottom: 6px;">Sala de Espera</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Compartí este código para que se unan a la partida:</p>
+
+        <div style="font-size: 1.8rem; font-weight: 700; letter-spacing: 4px; color: var(--accent); margin: 20px 0;" id="lobby-code-display">----</div>
+
+        <div class="player-list" id="player-list"></div>
+
+        <button class="btn" id="start-game-btn" style="display: none;" onclick="startGame()">Iniciar Partida</button>
+        <p id="waiting-host-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 12px;">Esperando que el anfitrión inicie la partida...</p>
+      </div>
+    </div>
+
+    <!-- PANTALLA JUEGO -->
+    <div id="screen-game" class="screen">
+      <div class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span id="game-progress" style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">PREGUNTA 1/5</span>
+          <span id="game-score" style="font-size: 0.88rem; font-weight: 600; color: var(--accent);">0 PTS</span>
+        </div>
+
+        <h2 id="question-text" style="font-size: 1.15rem; font-weight: 600; line-height: 1.4;">Cargando...</h2>
+        <div class="options-grid" id="options-container"></div>
+      </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div id="screen-results" class="screen">
+      <div class="panel" style="text-align: center;">
+        <h2 style="font-size: 1.4rem; font-weight: 600; margin-bottom: 8px;">Tabla de Posiciones</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Puntajes finales de la ronda:</p>
+
+        <div class="player-list" id="final-leaderboard"></div>
+        <button class="btn" onclick="location.reload()" style="margin-top: 12px;">Volver al Menú</button>
+      </div>
+    </div>
+
+  </main>
 
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAR7TbfT1JSYYMF367yHmorVSKFJfkcG3c",
+    authDomain: "trivia-history.firebaseapp.com",
+    databaseURL: "https://trivia-history-default-rtdb.firebaseio.com",
+    projectId: "trivia-history",
+    storageBucket: "trivia-history.firebasestorage.app",
+    messagingSenderId: "773941577511",
+    appId: "1:773941577511:web:f728a28c4de7e7ac6a4b02",
+    measurementId: "G-TPPTVL5EZC"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   const questions = [
-    {
-      q: "¿Qué hito de la Edad Antigua es considerado el primer código legal escrito y conservado integralmente?",
-      options: ["Las Doce Tablas", "El Código de Hammurabi", "El Código de Justiniano", "El Edicto de Milán"],
-      correct: 1,
-      exp: "El Código de Hammurabi (Babilonia, 1750 a.C.) estableció principios de justicia unificados basados en la ley del talión."
-    },
-    {
-      q: "La caída de este imperio en 1453 marcó tradicionalmente el inicio de la Edad Moderna:",
-      options: ["Imperio Romano de Occidente", "Imperio Otomano", "Imperio Bizantino", "Imperio Carolingio"],
-      correct: 2,
-      exp: "La caída de Constantinopla a manos de los otomanos puso fin a más de mil años de existencia del Imperio Romano de Oriente (Bizantino)."
-    },
-    {
-      q: "¿Qué invento desarrollado por Johannes Gutenberg hacia 1440 revolucionó la difusión de la cultura?",
-      options: ["El astrolabio", "La imprenta de tipos móviles", "El telégrafo óptico", "El papel de arroz"],
-      correct: 1,
-      exp: "La imprenta permitió democratizar el acceso al conocimiento y aceleró eventos como la Reforma Protestante y el Renacimiento."
-    },
-    {
-      q: "¿Cuál de los siguientes acontecimientos inició la llamada Edad Contemporánea en 1789?",
-      options: ["Independencia de EE. UU.", "La Revolución Francesa", "La Coronación de Napoleón", "La Revolución Industrial"],
-      correct: 1,
-      exp: "La Revolución Francesa sentó las bases de la democracia moderna y los derechos fundamentales del ciudadano en Occidente."
-    },
-    {
-      q: "Conflicto diplomático e ideológico entre EE. UU. y la URSS sin enfrentamiento militar directo:",
-      options: ["Primera Guerra Mundial", "Guerra de los Siete Años", "La Guerra Fría", "Guerra de Corea"],
-      correct: 2,
-      exp: "La Guerra Fría (1947-1991) dividió al mundo en dos bloques ideológicos y determinó la geopolítica global de la segunda mitad del siglo XX."
-    }
+    { q: "¿Qué hito de la Edad Antigua es considerado el primer código legal escrito conservado integralmente?", options: ["Las Doce Tablas", "Código de Hammurabi", "Código de Justiniano", "Edicto de Milán"], correct: 1 },
+    { q: "La caída de este imperio en el año 1453 marcó tradicionalmente el fin de la Edad Media:", options: ["Imperio Romano de Occidente", "Imperio Otomano", "Imperio Bizantino", "Imperio Carolingio"], correct: 2 },
+    { q: "¿Qué invento desarrollado por Johannes Gutenberg hacia 1440 revolucionó la difusión del conocimiento?", options: ["El astrolabio", "La imprenta de tipos móviles", "El telégrafo óptico", "El papel de arroz"], correct: 1 },
+    { q: "¿Cuál de los siguientes acontecimientos inició la llamada Edad Contemporánea en 1789?", options: ["Independencia de EE.UU.", "La Revolución Francesa", "Coronación de Napoleón", "La Revolución Industrial"], correct: 1 },
+    { q: "Conflicto diplomático e ideológico entre EE.UU. y la URSS sin enfrentamiento militar directo:", options: ["Primera Guerra Mundial", "Guerra de los Siete Años", "La Guerra Fría", "Guerra de Corea"], correct: 2 }
   ];
 
-  let currentIdx = 0;
+  let currentRoom = null;
+  let playerId = null;
+  let playerName = "";
+  let isHost = false;
   let score = 0;
 
-  function loadQuestion() {
-    const q = questions[currentIdx];
-    document.getElementById("progress").innerText = `Pregunta ${currentIdx + 1}/${questions.length}`;
-    document.getElementById("question-text").innerText = q.q;
-    document.getElementById("explanation-text").style.display = "none";
-    document.getElementById("next-btn").style.display = "none";
+  function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+  }
 
-    const container = document.getElementById("options-container");
-    container.innerHTML = "";
+  function showJoinBox() {
+    document.getElementById('join-box').style.display = 'block';
+    document.getElementById('join-trigger').style.display = 'none';
+  }
 
-    q.options.forEach((opt, idx) => {
-      const btn = document.createElement("button");
+  function clearInputError() {
+    const input = document.getElementById('player-name');
+    const errorMsg = document.getElementById('name-error-msg');
+    input.classList.remove('error');
+    errorMsg.style.display = 'none';
+  }
+
+  function createRoom() {
+    const input = document.getElementById('player-name');
+    const errorMsg = document.getElementById('name-error-msg');
+    playerName = input.value.trim();
+
+    if (!playerName) {
+      input.classList.add('error');
+      errorMsg.style.display = 'flex';
+      input.focus();
+      return;
+    }
+
+    const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    playerId = db.ref('rooms/' + roomCode + '/players').push().key;
+    isHost = true;
+    currentRoom = roomCode;
+
+    db.ref('rooms/' + roomCode).set({
+      status: 'waiting',
+      currentQuestion: 0,
+      host: playerId
+    });
+
+    db.ref(`rooms/${roomCode}/players/${playerId}`).set({
+      name: playerName,
+      score: 0
+    });
+
+    listenRoom(roomCode);
+    showScreen('screen-lobby');
+    document.getElementById('lobby-code-display').innerText = roomCode;
+    document.getElementById('start-game-btn').style.display = 'block';
+    document.getElementById('waiting-host-msg').style.display = 'none';
+  }
+
+  function joinRoom() {
+    const input = document.getElementById('player-name');
+    const errorMsg = document.getElementById('name-error-msg');
+    playerName = input.value.trim();
+    const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+
+    if (!playerName) {
+      input.classList.add('error');
+      errorMsg.style.display = 'flex';
+      input.focus();
+      return;
+    }
+
+    if (!code) return alert("Ingresá el código de la sala.");
+
+    db.ref('rooms/' + code).once('value', snapshot => {
+      if (!snapshot.exists()) return alert("La sala no existe.");
+
+      currentRoom = code;
+      playerId = db.ref(`rooms/${code}/players`).push().key;
+
+      db.ref(`rooms/${code}/players/${playerId}`).set({
+        name: playerName,
+        score: 0
+      });
+
+      listenRoom(code);
+      showScreen('screen-lobby');
+      document.getElementById('lobby-code-display').innerText = code;
+    });
+  }
+
+  function listenRoom(code) {
+    db.ref(`rooms/${code}/players`).on('value', snapshot => {
+      const players = snapshot.val() || {};
+      const list = document.getElementById('player-list');
+      list.innerHTML = '';
+      
+      Object.values(players).forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'player-row';
+        div.innerHTML = `<span>${p.name}</span> <span style="color:var(--text-muted);">${p.score} pts</span>`;
+        list.appendChild(div);
+      });
+    });
+
+    db.ref(`rooms/${code}/status`).on('value', snapshot => {
+      if (snapshot.val() === 'playing') {
+        showScreen('screen-game');
+        loadQuestion(0);
+      } else if (snapshot.val() === 'finished') {
+        showResults();
+      }
+    });
+
+    db.ref(`rooms/${code}/currentQuestion`).on('value', snapshot => {
+      const qIdx = snapshot.val();
+      if (qIdx !== null && qIdx > 0) {
+        loadQuestion(qIdx);
+      }
+    });
+  }
+
+  function startGame() {
+    db.ref(`rooms/${currentRoom}`).update({ status: 'playing', currentQuestion: 0 });
+  }
+
+  function loadQuestion(idx) {
+    if (idx >= questions.length) {
+      if (isHost) db.ref(`rooms/${currentRoom}`).update({ status: 'finished' });
+      return;
+    }
+
+    const q = questions[idx];
+    document.getElementById('game-progress').innerText = `PREGUNTA ${idx + 1}/${questions.length}`;
+    document.getElementById('question-text').innerText = q.q;
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+
+    q.options.forEach((opt, optIdx) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
       btn.innerText = opt;
-      btn.onclick = () => selectOption(idx);
+      btn.onclick = () => selectAnswer(optIdx, q.correct, idx);
       container.appendChild(btn);
     });
   }
 
-  function selectOption(selectedIdx) {
-    const q = questions[currentIdx];
-    const buttons = document.querySelectorAll("#options-container button");
+  function selectAnswer(selected, correct, qIdx) {
+    const btns = document.querySelectorAll('.opt-btn');
+    btns.forEach(b => b.disabled = true);
 
-    buttons.forEach((btn, idx) => {
-      btn.disabled = true;
-      if (idx === q.correct) btn.classList.add("correct");
-      if (idx === selectedIdx && selectedIdx !== q.correct) btn.classList.add("incorrect");
-    });
-
-    if (selectedIdx === q.correct) {
+    if (selected === correct) {
+      btns[selected].classList.add('correct');
       score += 100;
-      document.getElementById("score").innerText = `Puntos: ${score}`;
-    }
-
-    const expText = document.getElementById("explanation-text");
-    expText.innerText = q.exp;
-    expText.style.display = "block";
-    document.getElementById("next-btn").style.display = "block";
-  }
-
-  function nextQuestion() {
-    currentIdx++;
-    if (currentIdx < questions.length) {
-      loadQuestion();
+      document.getElementById('game-score').innerText = `${score} PTS`;
+      document.getElementById('nav-score').innerText = score;
+      db.ref(`rooms/${currentRoom}/players/${playerId}`).update({ score: score });
     } else {
-      document.getElementById("quiz").style.display = "none";
-      document.getElementById("result").style.display = "block";
-      document.getElementById("final-score").innerText = `Puntaje final: ${score} de ${questions.length * 100} puntos.`;
+      btns[selected].classList.add('incorrect');
+      btns[correct].classList.add('correct');
     }
+
+    setTimeout(() => {
+      if (isHost) {
+        db.ref(`rooms/${currentRoom}`).update({ currentQuestion: qIdx + 1 });
+      }
+    }, 2000);
   }
 
-  function restartGame() {
-    currentIdx = 0;
-    score = 0;
-    document.getElementById("score").innerText = "Puntos: 0";
-    document.getElementById("quiz").style.display = "block";
-    document.getElementById("result").style.display = "none";
-    loadQuestion();
-  }
+  function showResults() {
+    showScreen('screen-results');
+    db.ref(`rooms/${currentRoom}/players`).once('value', snapshot => {
+      const players = Object.values(snapshot.val() || {}).sort((a,b) => b.score - a.score);
+      const list = document.getElementById('final-leaderboard');
+      list.innerHTML = '';
 
-  loadQuestion();
+      players.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'player-row';
+        div.innerHTML = `<span>#${idx + 1} ${p.name}</span> <span style="color:var(--accent);">${p.score} PTS</span>`;
+        list.appendChild(div);
+      });
+    });
+  }
 </script>
 </body>
 </html>
