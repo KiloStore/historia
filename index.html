@@ -467,26 +467,41 @@
     }
   }
 
-  function handleGoogleAuth() {
-    clearError('auth-error-box');
-    const provider = new firebase.auth.GoogleAuthProvider();
-    
-    auth.signInWithPopup(provider)
-      .then(result => {
-        const user = result.user;
-        db.ref(`users/${user.uid}`).once('value', snapshot => {
-          if (!snapshot.exists()) {
-            db.ref(`users/${user.uid}`).set({
-              username: user.displayName || "Usuario",
-              points: 0,
-              played: 0,
-              wins: 0
-            });
-          }
-        });
-      })
-      .catch(err => showError('auth-error-box', 'No se pudo iniciar sesión con Google.'));
-  }
+function handleGoogleAuth() {
+  clearError('auth-error-box');
+  const provider = new firebase.auth.GoogleAuthProvider();
+  
+  // Fuerza a Google a mostrar la selección de cuentas siempre
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  auth.signInWithPopup(provider)
+    .then(result => {
+      const user = result.user;
+      db.ref(`users/${user.uid}`).once('value', snapshot => {
+        if (!snapshot.exists()) {
+          db.ref(`users/${user.uid}`).set({
+            username: user.displayName || "Usuario",
+            points: 0,
+            played: 0,
+            wins: 0
+          });
+        }
+      });
+    })
+    .catch(err => {
+      console.error("Error de Google Auth:", err);
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        showError('auth-error-box', 'Se cerró la ventana antes de completar el ingreso.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        showError('auth-error-box', 'Este dominio no está autorizado en Firebase.');
+      } else if (err.code === 'auth/popup-blocked') {
+        showError('auth-error-box', 'El navegador bloqueó la ventana emergente.');
+      } else {
+        showError('auth-error-box', 'No se pudo iniciar sesión con Google.');
+      }
+    });
+}
 
   function translateAuthError(code) {
     switch (code) {
